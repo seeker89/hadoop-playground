@@ -1,0 +1,5 @@
+I am a testfile
+used in a
+mapreduce job
+that counts word instances
+used in a
