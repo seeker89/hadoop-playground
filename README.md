@@ -12,6 +12,9 @@ The provided script will download un unarchive it to ./hadoop (in .gitignore):
 
 Whilst the thing is working, take a look at some docs
 
+Hadoop principles and tutorial
+* [https://docs.marklogic.com/guide/mapreduce/hadoop](https://docs.marklogic.com/guide/mapreduce/hadoop)
+
 Mini cluster:
 * setting up mini cluster [http://hadoop.apache.org/docs/current/hadoop-project-dist/hadoop-common/CLIMiniCluster.html](http://hadoop.apache.org/docs/current/hadoop-project-dist/hadoop-common/CLIMiniCluster.html)
 
