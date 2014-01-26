@@ -146,8 +146,9 @@ public class Tree {
 			if (line.contains(":") && !line.contains("#"))
 			{
 				// Parsing "GOAL"
-				line = line.trim();
-				Tree node = new Tree(line.substring(0, Math.min(line.indexOf(":"), line.indexOf(" "))));
+				line = line.trim().replace(" :", ":");
+				System.out.println(line);
+				Tree node = new Tree(line.substring(0, line.indexOf(":")));
 				
 				// Parsing dependencies
 				line = line.substring(line.indexOf(":"));

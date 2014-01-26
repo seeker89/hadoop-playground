@@ -128,6 +128,9 @@ public class Make extends Configured implements Tool {
 			makefile = "Makefile";
 		}
 		
+		System.out.println("Running a distributed make: " + wd + " - '" + goal + "' from " + makefile);
+		
+		
 		// Create the job we will modify and run several times
         job = new Job(getConf());
         
