@@ -1,5 +1,5 @@
 all.txt: lot1.txt lot2.txt lol.txt
-	cat lot1.txt > all.txt; lot2.txt >> all.txt; lol.txt >> all.txt
+	cat lot1.txt > all.txt; cat lot2.txt >> all.txt; cat lol.txt >> all.txt
 
 lot1.txt:
 	rm -f lot1.txt; for i in {0..4}; do echo "lot1:"$i >> lot1.txt; done;
