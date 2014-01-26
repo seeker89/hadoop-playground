@@ -45,7 +45,7 @@ You will need Hadoop 1.2.1 up and running.
 
 To compile, just use maven:
 
-    mvn clean compile
+    mvn clean compile jar:jar
 
 Let's test it:
     
@@ -55,7 +55,7 @@ Let's test it:
     hadoop fs -copyFromLocal test.txt texts
     
     # run the job
-    hadoop jar make-0.0.1-SNAPSHOT.jar hadoop_playground.make.MakeMapper texts output
+    hadoop jar make-0.0.1-SNAPSHOT.jar hadoop_playground.make.Make texts output
     
     # check the output in the
     hadoop fs -ls output
@@ -63,6 +63,8 @@ Let's test it:
 
 
 ## Using Hadoop for the distributed make
+
+
 
 
 
