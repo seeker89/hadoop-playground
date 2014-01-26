@@ -146,7 +146,8 @@ public class Make extends Configured implements Tool {
 			job.setJobName("make");
 			job.setOutputKeyClass(Text.class);
 			job.setOutputValueClass(IntWritable.class);
-	        job.setMapperClass(MapExecutor.class);
+			job.setMapperClass(MapExecutor.class);
+			job.setReducerClass(Reduce.class);
 			
 			iterationDir = "/iteration" + i;
 			
@@ -188,6 +189,7 @@ public class Make extends Configured implements Tool {
 		job.setOutputKeyClass(Text.class);
 		job.setOutputValueClass(IntWritable.class);
         job.setMapperClass(MapExecutor.class);
+        job.setReducerClass(Reduce.class);
         
 		FileInputFormat.setInputPaths(job, new Path(wd + iterationDir));
 		FileOutputFormat.setOutputPath(job, new Path(wd + iterationDir + "_out"));
