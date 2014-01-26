@@ -5,6 +5,7 @@ import java.io.BufferedWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
+import java.util.Set;
 import java.util.StringTokenizer;
 
 import org.apache.hadoop.conf.Configured;
@@ -32,13 +33,63 @@ public class MakeMapper extends Configured implements Tool {
 
 		@Override
 		protected void map(Object key, Text value, Context context) throws IOException, InterruptedException {
-
-			StringTokenizer tokenizer = new StringTokenizer(value.toString());
-			while (tokenizer.hasMoreTokens()) {
-				String token = tokenizer.nextToken();
-				word.set(token);
-				context.write(word, ONE);
+			FileSystem fs = FileSystem.get(context.getConfiguration());
+			
+			System.out.println("INSIDE MAP JOB");
+			
+			// INFLATE VALUE
+			String line = value.toString();
+			// Value format: producedFileName:dep1 dep2 dep3:commandToExecute
+			String producedFileName;
+			String[] dependencies;
+			String commandToExecute;
+			
+			// inflate filename
+			producedFileName = line.substring(0, value.toString().indexOf(":"));
+			
+			// inflate dependency list and command
+			String depList;
+			
+			depList = line.substring(line.indexOf(":") + 1);
+			
+			// inflate command
+			int commandIndex = depList.indexOf(":") + 1;
+			commandToExecute = depList.substring(commandIndex);
+			
+			depList = depList.substring(0, depList.indexOf(":"));
+			
+			if (depList.isEmpty()) {
+				dependencies = null;
+				System.out.println("DETECTED EMPTY LIST");
+			} else {
+				dependencies = depList.split(" ");
 			}
+			
+			
+			
+			
+			// COPY DEPENDENCIES FROM HDFS TO TMP
+			int i = 0;
+			try {
+				if (dependencies != null) {
+					for (i = 0; i < dependencies.length; i++) {
+						System.out.println("TRYING TO COPY HDFS:" + dependencies[i] + " TO LOCAL");
+						fs.copyToLocalFile(false, new Path(dependencies[i]), new Path("./" + dependencies));
+					}
+				}
+			} catch(Exception e){
+				System.err.println(" ** ERROR: Missing dependency " + dependencies[i]);
+				return;
+            }
+			
+			// RUN COMMAND
+			System.out.println("RUNNING CMD:" + commandToExecute);
+			Process p = Runtime.getRuntime().exec(new String[]{ "bash", "-c", commandToExecute.toString() });
+			p.waitFor();
+
+			// MOVE RESULT TO HDFS
+			System.out.println("TRYING TO COPY:" + producedFileName);
+			fs.copyFromLocalFile(false, new Path(producedFileName), new Path("makefile/" + producedFileName));
 		}
 	}
 		
@@ -64,9 +115,9 @@ public class MakeMapper extends Configured implements Tool {
 		/*
 		 *  PARSE MAKEFILE
 		 */
-		
 		Configuration conf = new Configuration();
 		FileSystem fs = FileSystem.get(conf);
+		/*
 		Path pathToMakefile = new Path(args[0]+"/Makefile");
 		Path pathToParsed = new Path(args[0]+"/workdir/Makefile_parsed");
 		
@@ -146,7 +197,7 @@ public class MakeMapper extends Configured implements Tool {
 		
 		br.close();
 		bw.close();
-		
+		*/
 		
 		// DISPATCH JOB
         Job job = new Job(getConf());
