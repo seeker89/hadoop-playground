@@ -145,6 +145,9 @@ public class Make extends Configured implements Tool {
 		FileSystem fs = FileSystem.get(getConf());
 		
 		Tree tree = new Tree(new Path(wd + "/" + makefile), getConf(), goal);
+		
+		// debug information
+		tree.printAll();
         
 		while(tree.hasChildren()){
 			
@@ -162,7 +165,7 @@ public class Make extends Configured implements Tool {
 			writer.close();
 			
 			FileInputFormat.setInputPaths(job, new Path(wd + iterationDir));
-			FileOutputFormat.setOutputPath(job, new Path(wd));
+			FileOutputFormat.setOutputPath(job, new Path(wd + iterationDir));
 			
 			// execute and check the status
 			if (!job.waitForCompletion(true)){
@@ -176,11 +179,12 @@ public class Make extends Configured implements Tool {
 		}
 		
 		// TODO execute the actual goal
-		BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(fs.create(new Path(wd + "/final" + "/workload"), true)));
+		iterationDir = "/final";
+		BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(fs.create(new Path(wd + iterationDir + "/workload"), true)));
 		writer.append(tree.toString() + System.getProperty("line.separator"));
 		writer.close();
-		FileInputFormat.setInputPaths(job, new Path(wd + "/final"));
-		FileOutputFormat.setOutputPath(job, new Path(wd));
+		FileInputFormat.setInputPaths(job, new Path(wd + iterationDir));
+		FileOutputFormat.setOutputPath(job, new Path(wd + iterationDir + "_out"));
 		
 		return job.waitForCompletion(true) ? 0 : 1; 
 	}

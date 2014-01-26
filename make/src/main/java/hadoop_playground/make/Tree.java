@@ -111,15 +111,25 @@ public class Tree {
 	
 	public String toString(){
 		String res = getGoal() + ":";
-		for (int i = 0; i < getDependencies().length; i++){
-			String dep = getDependencies()[i];
-			res = res + dep;
-			if (i + 1 < getDependencies().length){
-				res = res + " ";
+		if (getDependencies() != null){
+			for (int i = 0; i < getDependencies().length; i++){
+				String dep = getDependencies()[i];
+				res = res + dep;
+				if (i + 1 < getDependencies().length){
+					res = res + " ";
+				}
 			}
 		}
 		res = res + ":" + getCmd();
 		return res;
+	}
+	
+	public void printAll(){
+		System.out.println("Printing entire tree");
+		System.out.println(toString());
+		for(Tree node: getNodes()){
+			System.out.println(node);
+		}
 	}
 
 	
@@ -199,6 +209,7 @@ public class Tree {
 		setCmd(root.getCmd());
 		setGoal(root.getGoal());
 		setNodes(root.getNodes());
+		setDependencies(root.getDependencies());
 	}
 
 }
