@@ -1,6 +1,9 @@
 package hadoop_playground.make;
 
+import java.io.BufferedWriter;
 import java.io.IOException;
+import java.io.OutputStreamWriter;
+import java.util.ArrayList;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.conf.Configured;
@@ -80,35 +83,84 @@ public class Make extends Configured implements Tool {
 			fs.copyFromLocalFile(false, new Path(producedFileName), new Path("makefile/" + producedFileName));
 			
 			// save the created file info
-			context.write(new Text(producedFileName), ONE);
+			word.set(producedFileName);
+			context.write(word, ONE);
 		}
 	}
 
 	public int run(String[] args) throws Exception {
 		
-		Configuration conf = new Configuration();
-		FileSystem fs = FileSystem.get(conf);
+		if (args.length < 2){
+			System.err.println(" ** Usage: .jar {working directory} {goal} {makefile name = Makefile} ");
+			System.exit(0);
+		}
 		
+		// init parameters
+		String wd = args[0];
+		String goal = args[1];
+		String makefile;
+		ArrayList<Tree> leaves;
+		String iterationDir;
+		Job job;
+		int i = 0;
 		
+		if (args.length > 2){
+			makefile = args[2];
+		}else{
+			makefile = "Makefile";
+		}
 		
-		// run a test job
-        Job job = new Job(getConf());
+		// Create the job we will modify and run several times
+        job = new Job(getConf());
         
 		job.setJarByClass(Make.class);
 		job.setJobName("make");
-		
 		job.setOutputKeyClass(Text.class);
 		job.setOutputValueClass(IntWritable.class);
-		
         job.setMapperClass(MapExecutor.class);
-//        job.setReducerClass(Reduce.class);
         
         
-		FileInputFormat.setInputPaths(job, new Path(args[0]+"/workdir/"));
+        // get the Makefile
+		FileSystem fs = FileSystem.get(getConf());
 		
-		fs.delete(new Path(args[1]), true); // delete previous output
-		FileOutputFormat.setOutputPath(job, new Path(args[1]));
-
+		Tree tree = new Tree(new Path(wd + "/" + makefile), getConf(), goal);
+        
+		while(tree.hasChildren()){
+			
+			iterationDir = "/iteration" + i;
+			
+			System.out.println("Running iteration #" + i + " (" + iterationDir + ")");
+			
+			leaves = tree.getLeaves();
+			
+			// generate a text file with a list of commands which can be executed in parallel
+			BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(fs.create(new Path(wd + iterationDir + "/workload"), true)));
+			for (Tree node : leaves){
+				writer.append(node.toString() + System.getProperty("line.separator"));
+			}
+			writer.close();
+			
+			FileInputFormat.setInputPaths(job, new Path(wd + iterationDir));
+			FileOutputFormat.setOutputPath(job, new Path(wd));
+			
+			// execute and check the status
+			if (!job.waitForCompletion(true)){
+				return 1;
+			}
+			
+			// delete the leaves
+			for (Tree leave : leaves){
+				leave.setDeleted(true);
+			}
+		}
+		
+		// TODO execute the actual goal
+		BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(fs.create(new Path(wd + "/final" + "/workload"), true)));
+		writer.append(tree.toString() + System.getProperty("line.separator"));
+		writer.close();
+		FileInputFormat.setInputPaths(job, new Path(wd + "/final"));
+		FileOutputFormat.setOutputPath(job, new Path(wd));
+		
 		return job.waitForCompletion(true) ? 0 : 1; 
 	}
 	
