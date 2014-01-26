@@ -13,6 +13,7 @@ import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.Mapper;
+import org.apache.hadoop.mapreduce.Reducer;
 import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.apache.hadoop.util.Tool;
@@ -23,23 +24,36 @@ public class Make extends Configured implements Tool {
 	public static class MapExecutor extends Mapper<Object, Text, Text, IntWritable> {
 
 		private static final IntWritable ONE = new IntWritable(1);
-		private Text word = new Text();
 
 		@Override
 		protected void map(Object key, Text value, Context context) throws IOException, InterruptedException {
+			// do nothing - pass to Reduce so that they can be done on different nodes
+			context.write(value, ONE);
+		}
+	}
+	
+	public static class Reduce extends Reducer<Text, IntWritable, Text, IntWritable> {
+
+		private IntWritable count = new IntWritable();
+
+		@Override
+		protected void reduce(Text key, Iterable<IntWritable> values, Context context) throws IOException, InterruptedException {
+			
+			// in reduce, we actually execute the code
+
 			FileSystem fs = FileSystem.get(context.getConfiguration());
 			
 			System.out.println("INSIDE MAP JOB");
 			
 			// INFLATE VALUE
-			String line = value.toString();
+			String line = key.toString();
 			// Value format: producedFileName:dep1 dep2 dep3:commandToExecute
 			String producedFileName;
 			String[] dependencies;
 			String commandToExecute;
 			
 			// inflate filename
-			producedFileName = line.substring(0, value.toString().indexOf(":"));
+			producedFileName = line.substring(0, key.toString().indexOf(":"));
 			
 			// inflate dependency list and command
 			String depList;
@@ -78,13 +92,17 @@ public class Make extends Configured implements Tool {
 			Process p = Runtime.getRuntime().exec(new String[]{ "bash", "-c", commandToExecute.toString() });
 			p.waitFor();
 
-			// MOVE RESULT TO HDFS
+			// MOVE RESULT BACK TO HDFS
 			System.out.println("TRYING TO COPY:" + producedFileName);
 			fs.copyFromLocalFile(false, new Path(producedFileName), new Path("makefile/" + producedFileName));
 			
-			// save the created file info
-			word.set(producedFileName);
-			context.write(word, ONE);
+			// STORE A TRACE OF WHAT HAPPENED
+			int sum = 0;
+			for (IntWritable value : values) {
+				sum += value.get();
+			}
+			count.set(sum);
+			context.write(key, count);
 		}
 	}
 
