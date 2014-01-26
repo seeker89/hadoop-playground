@@ -138,7 +138,7 @@ public class Make extends Configured implements Tool {
 		// debug information
 		tree.printAll();
         
-		while(tree.hasChildren()){
+		while(tree.hasChildren()) {
 			
 	        job = new Job(getConf());
 	        
@@ -174,6 +174,8 @@ public class Make extends Configured implements Tool {
 			for (Tree leave : leaves){
 				leave.setDeleted(true);
 			}
+			
+			i++;
 		}
 		
 		// TODO execute the actual goal
