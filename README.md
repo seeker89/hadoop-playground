@@ -36,3 +36,31 @@ General:
 
 Streaming API:
 * [http://www.michael-noll.com/tutorials/writing-an-hadoop-mapreduce-program-in-python/](http://www.michael-noll.com/tutorials/writing-an-hadoop-mapreduce-program-in-python/)
+
+
+## Compiling the example
+
+In the folder "make" there is a maven/eclipse project, using Hadoop 1.2.1. You can import it with eclipse. It's the word count example.
+You will need Hadoop 1.2.1 up and running.
+
+To compile, just use maven:
+    mvn clean compile
+
+Let's test it:
+    # put some text in the file
+    echo "hello moto, how are you ? hadoop hadoop" > test.txt
+    hadoop fs -mkdir texts 
+    hadoop fs -copyFromLocal test.txt texts
+
+    # run the job
+    hadoop jar make-0.0.1-SNAPSHOT.jar hadoop_playground.make.MakeMapper texts output
+
+    # check the output in the
+    hadoop fs -ls output
+    hadoop fs -cat output/part-r-00000
+
+
+## Using Hadoop for the distributed make
+
+
+

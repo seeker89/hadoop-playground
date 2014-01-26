@@ -18,15 +18,13 @@ import org.apache.hadoop.util.ToolRunner;
 
 public class MakeMapper extends Configured implements Tool {
 	
-	public static class MapClass extends
-			Mapper<Object, Text, Text, IntWritable> {
+	public static class MapClass extends Mapper<Object, Text, Text, IntWritable> {
 
 		private static final IntWritable ONE = new IntWritable(1);
 		private Text word = new Text();
 
 		@Override
-		protected void map(Object key, Text value, Context context)
-				throws IOException, InterruptedException {
+		protected void map(Object key, Text value, Context context) throws IOException, InterruptedException {
 
 			StringTokenizer tokenizer = new StringTokenizer(value.toString());
 			while (tokenizer.hasMoreTokens()) {
