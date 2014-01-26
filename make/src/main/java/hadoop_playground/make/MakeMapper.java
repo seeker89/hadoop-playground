@@ -35,14 +35,12 @@ public class MakeMapper extends Configured implements Tool {
 		}
 	}
 		
-	public static class Reduce extends
-			Reducer<Text, IntWritable, Text, IntWritable> {
+	public static class Reduce extends Reducer<Text, IntWritable, Text, IntWritable> {
 
 		private IntWritable count = new IntWritable();
 
 		@Override
-		protected void reduce(Text key, Iterable<IntWritable> values,
-				Context context) throws IOException, InterruptedException {
+		protected void reduce(Text key, Iterable<IntWritable> values, Context context) throws IOException, InterruptedException {
 
 			int sum = 0;
 			for (IntWritable value : values) {
@@ -55,6 +53,7 @@ public class MakeMapper extends Configured implements Tool {
 
 	public int run(String[] args) throws Exception {		
         Job job = new Job(getConf());
+        
 		job.setJarByClass(MakeMapper.class);
 		job.setJobName("wordcount");
 		
