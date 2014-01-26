@@ -66,7 +66,7 @@ public class MakeMapper extends Configured implements Tool {
 		Configuration conf = new Configuration();
 		FileSystem fs = FileSystem.get(conf);
 		Path pathToMakefile = new Path(args[0]+"/Makefile");
-		Path pathToParsed = new Path(args[0]+"/Makefile_parsed");
+		Path pathToParsed = new Path(args[0]+"/workdir/Makefile_parsed");
 		
 		// Check if Makefile available
 		if (!fs.exists(pathToMakefile)) {
@@ -145,9 +145,6 @@ public class MakeMapper extends Configured implements Tool {
 		br.close();
 		bw.close();
 		
-		// OVERWRITE MAKEFILE
-		fs.delete(pathToMakefile, false);
-		
 		
 		// DISPATCH JOB
         Job job = new Job(getConf());
@@ -161,7 +158,9 @@ public class MakeMapper extends Configured implements Tool {
         job.setMapperClass(MapClass.class);
         job.setReducerClass(Reduce.class);
 
-		FileInputFormat.setInputPaths(job, new Path(args[0]));
+		FileInputFormat.setInputPaths(job, new Path(args[0]+"/workdir/"));
+		
+		fs.delete(new Path(args[1]), true); // delete previous output
 		FileOutputFormat.setOutputPath(job, new Path(args[1]));
 
 		boolean success = job.waitForCompletion(true);
