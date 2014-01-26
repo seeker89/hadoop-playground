@@ -129,17 +129,6 @@ public class Make extends Configured implements Tool {
 		}
 		
 		System.out.println("Running a distributed make: " + wd + " - '" + goal + "' from " + makefile);
-		
-		
-		// Create the job we will modify and run several times
-        job = new Job(getConf());
-        
-		job.setJarByClass(Make.class);
-		job.setJobName("make");
-		job.setOutputKeyClass(Text.class);
-		job.setOutputValueClass(IntWritable.class);
-        job.setMapperClass(MapExecutor.class);
-        
         
         // get the Makefile
 		FileSystem fs = FileSystem.get(getConf());
@@ -150,6 +139,14 @@ public class Make extends Configured implements Tool {
 		tree.printAll();
         
 		while(tree.hasChildren()){
+			
+	        job = new Job(getConf());
+	        
+			job.setJarByClass(Make.class);
+			job.setJobName("make");
+			job.setOutputKeyClass(Text.class);
+			job.setOutputValueClass(IntWritable.class);
+	        job.setMapperClass(MapExecutor.class);
 			
 			iterationDir = "/iteration" + i;
 			
@@ -165,7 +162,7 @@ public class Make extends Configured implements Tool {
 			writer.close();
 			
 			FileInputFormat.setInputPaths(job, new Path(wd + iterationDir));
-			FileOutputFormat.setOutputPath(job, new Path(wd + iterationDir));
+			FileOutputFormat.setOutputPath(job, new Path(wd + iterationDir + "_out"));
 			
 			// execute and check the status
 			if (!job.waitForCompletion(true)){
@@ -183,6 +180,15 @@ public class Make extends Configured implements Tool {
 		BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(fs.create(new Path(wd + iterationDir + "/workload"), true)));
 		writer.append(tree.toString() + System.getProperty("line.separator"));
 		writer.close();
+		
+        job = new Job(getConf());
+        
+		job.setJarByClass(Make.class);
+		job.setJobName("make");
+		job.setOutputKeyClass(Text.class);
+		job.setOutputValueClass(IntWritable.class);
+        job.setMapperClass(MapExecutor.class);
+        
 		FileInputFormat.setInputPaths(job, new Path(wd + iterationDir));
 		FileOutputFormat.setOutputPath(job, new Path(wd + iterationDir + "_out"));
 		
