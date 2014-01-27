@@ -43,7 +43,13 @@ public class Make extends Configured implements Tool {
 
 			FileSystem fs = FileSystem.get(context.getConfiguration());
 			
-			System.out.println("INSIDE MAP JOB");
+			System.out.println("INSIDE REDUCE JOB " + context.getWorkingDirectory());
+			
+			System.out.println("Input path: " + FileOutputFormat.getOutputPath(context));
+			
+			Path realPath = new Path(FileOutputFormat.getOutputPath(context) + "/../");
+			
+			System.out.println("Makefile real path: " + realPath);
 			
 			// INFLATE VALUE
 			String line = key.toString();
@@ -78,8 +84,8 @@ public class Make extends Configured implements Tool {
 			try {
 				if (dependencies != null) {
 					for (i = 0; i < dependencies.length; i++) {
-						System.out.println("TRYING TO COPY HDFS:" + dependencies[i] + " TO LOCAL");
-						fs.copyToLocalFile(false, new Path(context.getWorkingDirectory() + "/../" + dependencies[i]), new Path("./" + dependencies));
+						System.out.println("TRYING TO COPY HDFS:" + new Path(realPath + "/" + dependencies[i])+ " TO LOCAL " + new Path("./" + dependencies[i]));
+						fs.copyToLocalFile(false, new Path(realPath + "/" + dependencies[i]), new Path("./" + dependencies[i]));
 					}
 				}
 			} catch(Exception e){
@@ -93,8 +99,8 @@ public class Make extends Configured implements Tool {
 			p.waitFor();
 
 			// MOVE RESULT BACK TO HDFS
-			System.out.println("TRYING TO COPY:" + producedFileName);
-			fs.copyFromLocalFile(false, new Path(producedFileName), new Path(context.getWorkingDirectory() + "/../" + producedFileName));
+			System.out.println("TRYING TO COPY: " + new Path(producedFileName) + " -> " + new Path(realPath + "/" + producedFileName));
+			fs.copyFromLocalFile(false, new Path(producedFileName), new Path(realPath + "/" + producedFileName));
 			
 			// STORE A TRACE OF WHAT HAPPENED
 			int sum = 0;
