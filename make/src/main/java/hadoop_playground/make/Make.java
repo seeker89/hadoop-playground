@@ -79,7 +79,7 @@ public class Make extends Configured implements Tool {
 				if (dependencies != null) {
 					for (i = 0; i < dependencies.length; i++) {
 						System.out.println("TRYING TO COPY HDFS:" + dependencies[i] + " TO LOCAL");
-						fs.copyToLocalFile(false, new Path(dependencies[i]), new Path("./" + dependencies));
+						fs.copyToLocalFile(false, new Path(context.getWorkingDirectory() + "/../" + dependencies[i]), new Path("./" + dependencies));
 					}
 				}
 			} catch(Exception e){
@@ -94,7 +94,7 @@ public class Make extends Configured implements Tool {
 
 			// MOVE RESULT BACK TO HDFS
 			System.out.println("TRYING TO COPY:" + producedFileName);
-			fs.copyFromLocalFile(false, new Path(producedFileName), new Path("makefile/" + producedFileName));
+			fs.copyFromLocalFile(false, new Path(producedFileName), new Path(context.getWorkingDirectory() + "/../" + producedFileName));
 			
 			// STORE A TRACE OF WHAT HAPPENED
 			int sum = 0;
