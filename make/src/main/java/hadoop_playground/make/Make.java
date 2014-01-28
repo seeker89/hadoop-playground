@@ -143,10 +143,13 @@ public class Make extends Configured implements Tool {
 		
 		// debug information
 		tree.printAll();
+		
+		int nodesReduce;
         
 		while(tree.hasChildren()) {
 			
 			leaves = tree.getLeaves();
+			nodesReduce = leaves.size()/2;
 			
 	        job = new Job(getConf());
 	        
@@ -156,11 +159,11 @@ public class Make extends Configured implements Tool {
 			job.setOutputValueClass(IntWritable.class);
 			job.setMapperClass(MapExecutor.class);
 			job.setReducerClass(Reduce.class);
-			job.setNumReduceTasks(leaves.size());
+			job.setNumReduceTasks(nodesReduce);
 			
 			iterationDir = "/iteration" + i;
 			
-			System.out.println("Running iteration #" + i + " (" + iterationDir + ")");
+			System.out.println("Running iteration #" + i + " (" + iterationDir + ") with " + nodesReduce + " reduce tasks");
 			
 			
 			
