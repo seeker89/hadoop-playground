@@ -33,7 +33,7 @@ public class Make extends Configured implements Tool {
 		}
 	}
 	
-	public class MyCustomPartitioner extends Partitioner<Text, IntWritable>
+	public class RoundRobinPartitioner extends Partitioner<Text, IntWritable>
 	{
 	    public int getPartition(Text key, IntWritable value, int numPartitions) {
 	    	// round robin implementation
@@ -179,6 +179,7 @@ public class Make extends Configured implements Tool {
 			job.setMapperClass(MapExecutor.class);
 			job.setReducerClass(Reduce.class);
 			job.setNumReduceTasks(nodesReduce);
+			job.setPartitionerClass(RoundRobinPartitioner.class);
 			
 			iterationDir = "/iteration" + i;
 			
