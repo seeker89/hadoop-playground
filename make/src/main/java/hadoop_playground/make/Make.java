@@ -78,7 +78,7 @@ public class Make extends Configured implements Tool {
 			String commandToExecute;
 			
 			// inflate filename
-			producedFileName = line.substring(0, key.toString().indexOf(":"));
+			producedFileName = line.substring(0, line.indexOf(":"));
 			
 			// inflate dependency list and command
 			String depList;
@@ -188,9 +188,11 @@ public class Make extends Configured implements Tool {
 			
 			// generate a text file with a list of commands which can be executed in parallel
 			BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(fs.create(new Path(wd + iterationDir + "/workload"), true)));
+			int j = 0;
 			for (Tree node : leaves){
 				// round robin hack - store an id
-				writer.append(i + ">" + node.toString() + System.getProperty("line.separator"));
+				writer.append(j + ">" + node.toString() + System.getProperty("line.separator"));
+				j++;
 			}
 			writer.close();
 			
