@@ -35,10 +35,14 @@ public class Make extends Configured implements Tool {
 	
 	public class MyCustomPartitioner extends Partitioner<Text, IntWritable>
 	{
-		private int n = 0;
 	    public int getPartition(Text key, IntWritable value, int numPartitions) {
 	    	// round robin implementation
-			return ((++n) % numPartitions);
+			int n = 0;
+	    	String line = key.toString();
+	    	n = Integer.parseInt(line.substring(0, line.indexOf(">") - 1));
+	    	
+	    	System.out.println("INSIDE Paritioner. n=" + n + ", numPartitions=" + numPartitions);
+			return (n % numPartitions);
 	    }
 	}
 	
@@ -63,6 +67,11 @@ public class Make extends Configured implements Tool {
 			
 			// INFLATE VALUE
 			String line = key.toString();
+			
+			// round robin hack
+			// skip the ID part
+			line = line.substring(line.indexOf(">")+1);
+			
 			// Value format: producedFileName:dep1 dep2 dep3:commandToExecute
 			String producedFileName;
 			String[] dependencies;
@@ -180,7 +189,8 @@ public class Make extends Configured implements Tool {
 			// generate a text file with a list of commands which can be executed in parallel
 			BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(fs.create(new Path(wd + iterationDir + "/workload"), true)));
 			for (Tree node : leaves){
-				writer.append(node.toString() + System.getProperty("line.separator"));
+				// round robin hack - store an id
+				writer.append(i + ">" + node.toString() + System.getProperty("line.separator"));
 			}
 			writer.close();
 			
