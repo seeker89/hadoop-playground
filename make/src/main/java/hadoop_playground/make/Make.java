@@ -33,7 +33,7 @@ public class Make extends Configured implements Tool {
 		}
 	}
 	
-	public class RoundRobinPartitioner extends Partitioner<Text, IntWritable>
+	public static class RoundRobinPartitioner extends Partitioner<Text, IntWritable>
 	{
 	    public int getPartition(Text key, IntWritable value, int numPartitions) {
 	    	// round robin implementation
