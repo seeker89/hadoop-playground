@@ -1,5 +1,5 @@
 all.txt: sleep1.txt sleep2.txt sleep3.txt sleep4.txt sleep5.txt sleep6.txt sleep7.txt sleep8.txt
-	cat sleep1.txt > all.txt; cat sleep2.txt >> all.txt; cat sleep3.txt >> all.txt cat sleep4.txt >> all.txt cat sleep5.txt >> all.txt cat sleep6.txt >> all.txt cat sleep7.txt >> all.txt cat sleep8.txt >> all.txt
+	cat sleep1.txt > all.txt; cat sleep2.txt >> all.txt; cat sleep3.txt >> all.txt; cat sleep4.txt >> all.txt; cat sleep5.txt >> all.txt; cat sleep6.txt >> all.txt; cat sleep7.txt >> all.txt; cat sleep8.txt >> all.txt;
 
 sleep1.txt:
 	rm -f sleep1.txt; for i in {1..10}; do uname -a >> sleep1.txt; sleep 1; done;
