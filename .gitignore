@@ -3,3 +3,5 @@
 /hadoop
 /tests
 Sujet_sys_13.pdf
+
+make/target/maven-archiver/pom.properties

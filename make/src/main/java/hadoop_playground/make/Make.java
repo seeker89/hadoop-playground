@@ -146,6 +146,8 @@ public class Make extends Configured implements Tool {
         
 		while(tree.hasChildren()) {
 			
+			leaves = tree.getLeaves();
+			
 	        job = new Job(getConf());
 	        
 			job.setJarByClass(Make.class);
@@ -154,12 +156,13 @@ public class Make extends Configured implements Tool {
 			job.setOutputValueClass(IntWritable.class);
 			job.setMapperClass(MapExecutor.class);
 			job.setReducerClass(Reduce.class);
+			job.setNumReduceTasks(leaves.size());
 			
 			iterationDir = "/iteration" + i;
 			
 			System.out.println("Running iteration #" + i + " (" + iterationDir + ")");
 			
-			leaves = tree.getLeaves();
+			
 			
 			// generate a text file with a list of commands which can be executed in parallel
 			BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(fs.create(new Path(wd + iterationDir + "/workload"), true)));
