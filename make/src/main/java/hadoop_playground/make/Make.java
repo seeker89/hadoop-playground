@@ -39,7 +39,7 @@ public class Make extends Configured implements Tool {
 	    	// round robin implementation
 			int n = 0;
 	    	String line = key.toString();
-	    	n = Integer.parseInt(line.substring(0, line.indexOf(">") - 1));
+	    	n = Integer.parseInt(line.substring(0, line.indexOf(">")));
 	    	
 	    	System.out.println("INSIDE Paritioner. n=" + n + ", numPartitions=" + numPartitions);
 			return (n % numPartitions);
