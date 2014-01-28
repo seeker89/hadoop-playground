@@ -13,6 +13,7 @@ import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.Mapper;
+import org.apache.hadoop.mapreduce.Partitioner;
 import org.apache.hadoop.mapreduce.Reducer;
 import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
@@ -30,6 +31,15 @@ public class Make extends Configured implements Tool {
 			// do nothing - pass to Reduce so that they can be done on different nodes
 			context.write(value, ONE);
 		}
+	}
+	
+	public class MyCustomPartitioner extends Partitioner<Text, IntWritable>
+	{
+		private int n = 0;
+	    public int getPartition(Text key, IntWritable value, int numPartitions) {
+	    	// round robin implementation
+			return ((++n) % numPartitions);
+	    }
 	}
 	
 	public static class Reduce extends Reducer<Text, IntWritable, Text, IntWritable> {
@@ -149,7 +159,7 @@ public class Make extends Configured implements Tool {
 		while(tree.hasChildren()) {
 			
 			leaves = tree.getLeaves();
-			nodesReduce = leaves.size()/2;
+			nodesReduce = leaves.size();
 			
 	        job = new Job(getConf());
 	        

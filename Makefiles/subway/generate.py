@@ -46,7 +46,7 @@ for i in range(1, int(frames)+1):
 
 # main goal
 f.write('%s: %s\n' % (ofile, frames_string))
-f.write('\tconvert %s %s\n' % (frames_string, ofile))
+f.write('\tconvert %s -antialias -quality 95%% %s\n' % (frames_string, ofile))
 
 # frames
 for i in range(1, int(frames)+1):
