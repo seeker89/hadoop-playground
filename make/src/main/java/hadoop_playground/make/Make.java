@@ -13,6 +13,7 @@ import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.Mapper;
+import org.apache.hadoop.mapreduce.Partitioner;
 import org.apache.hadoop.mapreduce.Reducer;
 import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
@@ -32,6 +33,19 @@ public class Make extends Configured implements Tool {
 		}
 	}
 	
+	public static class RoundRobinPartitioner extends Partitioner<Text, IntWritable>
+	{
+	    public int getPartition(Text key, IntWritable value, int numPartitions) {
+	    	// round robin implementation
+			int n = 0;
+	    	String line = key.toString();
+	    	n = Integer.parseInt(line.substring(0, line.indexOf(">")));
+	    	
+	    	System.out.println("INSIDE Paritioner. n=" + n + ", numPartitions=" + numPartitions);
+			return (n % numPartitions);
+	    }
+	}
+	
 	public static class Reduce extends Reducer<Text, IntWritable, Text, IntWritable> {
 
 		private IntWritable count = new IntWritable();
@@ -43,17 +57,28 @@ public class Make extends Configured implements Tool {
 
 			FileSystem fs = FileSystem.get(context.getConfiguration());
 			
-			System.out.println("INSIDE MAP JOB");
+			System.out.println("INSIDE REDUCE JOB " + context.getWorkingDirectory());
+			
+			System.out.println("Input path: " + FileOutputFormat.getOutputPath(context));
+			
+			Path realPath = new Path(FileOutputFormat.getOutputPath(context) + "/../");
+			
+			System.out.println("Makefile real path: " + realPath);
 			
 			// INFLATE VALUE
 			String line = key.toString();
+			
+			// round robin hack
+			// skip the ID part
+			line = line.substring(line.indexOf(">")+1);
+			
 			// Value format: producedFileName:dep1 dep2 dep3:commandToExecute
 			String producedFileName;
 			String[] dependencies;
 			String commandToExecute;
 			
 			// inflate filename
-			producedFileName = line.substring(0, key.toString().indexOf(":"));
+			producedFileName = line.substring(0, line.indexOf(":"));
 			
 			// inflate dependency list and command
 			String depList;
@@ -78,8 +103,8 @@ public class Make extends Configured implements Tool {
 			try {
 				if (dependencies != null) {
 					for (i = 0; i < dependencies.length; i++) {
-						System.out.println("TRYING TO COPY HDFS:" + dependencies[i] + " TO LOCAL");
-						fs.copyToLocalFile(false, new Path(dependencies[i]), new Path("./" + dependencies));
+						System.out.println("TRYING TO COPY HDFS:" + new Path(realPath + "/" + dependencies[i])+ " TO LOCAL " + new Path("./" + dependencies[i]));
+						fs.copyToLocalFile(false, new Path(realPath + "/" + dependencies[i]), new Path("./" + dependencies[i]));
 					}
 				}
 			} catch(Exception e){
@@ -93,8 +118,8 @@ public class Make extends Configured implements Tool {
 			p.waitFor();
 
 			// MOVE RESULT BACK TO HDFS
-			System.out.println("TRYING TO COPY:" + producedFileName);
-			fs.copyFromLocalFile(false, new Path(producedFileName), new Path("makefile/" + producedFileName));
+			System.out.println("TRYING TO COPY: " + new Path(producedFileName) + " -> " + new Path(realPath + "/" + producedFileName));
+			fs.copyFromLocalFile(false, new Path(producedFileName), new Path(realPath + "/" + producedFileName));
 			
 			// STORE A TRACE OF WHAT HAPPENED
 			int sum = 0;
@@ -137,8 +162,13 @@ public class Make extends Configured implements Tool {
 		
 		// debug information
 		tree.printAll();
+		
+		int nodesReduce;
         
 		while(tree.hasChildren()) {
+			
+			leaves = tree.getLeaves();
+			nodesReduce = leaves.size();
 			
 	        job = new Job(getConf());
 	        
@@ -148,17 +178,22 @@ public class Make extends Configured implements Tool {
 			job.setOutputValueClass(IntWritable.class);
 			job.setMapperClass(MapExecutor.class);
 			job.setReducerClass(Reduce.class);
+			job.setNumReduceTasks(nodesReduce);
+			job.setPartitionerClass(RoundRobinPartitioner.class);
 			
 			iterationDir = "/iteration" + i;
 			
-			System.out.println("Running iteration #" + i + " (" + iterationDir + ")");
+			System.out.println("Running iteration #" + i + " (" + iterationDir + ") with " + nodesReduce + " reduce tasks");
 			
-			leaves = tree.getLeaves();
+			
 			
 			// generate a text file with a list of commands which can be executed in parallel
 			BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(fs.create(new Path(wd + iterationDir + "/workload"), true)));
+			int j = 0;
 			for (Tree node : leaves){
-				writer.append(node.toString() + System.getProperty("line.separator"));
+				// round robin hack - store an id
+				writer.append(j + ">" + node.toString() + System.getProperty("line.separator"));
+				j++;
 			}
 			writer.close();
 			

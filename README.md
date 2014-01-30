@@ -48,18 +48,18 @@ To compile, just use maven:
     mvn clean compile jar:jar
 
 Let's test it:
-    
-    # put some text in the file
-    echo "hello moto, how are you ? hadoop hadoop" > test.txt
-    hadoop fs -mkdir texts 
-    hadoop fs -copyFromLocal test.txt texts
-    
-    # run the job
-    hadoop jar make-0.0.1-SNAPSHOT.jar hadoop_playground.make.Make texts output
-    
-    # check the output in the
-    hadoop fs -ls output
-    hadoop fs -cat output/part-r-00000
+	
+	# ./make/launch_echos.sh
+	hadoop fs -rmr make-echos # remove in case it was ther before
+	hadoop fs -copyFromLocal ../Makefiles/echos/ make-echos # copy the example Makefile
+	mvn clean install jar:jar # recompile the jar
+	
+	# jar usage : {folder in HDFS with the Makefile} {goal to build} {name of the Makefile (=Makefile)}
+	hadoop jar make-0.0.1-SNAPSHOT.jar hadoop_playground.make.Make make-echos all.txt 
+		
+	# verify that the output is in the HDFS
+	echo "OUTPUT:"
+	hadoop fs -cat make-echos/all.txt
 
 
 ## Using Hadoop for the distributed make

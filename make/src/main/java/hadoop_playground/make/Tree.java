@@ -37,7 +37,13 @@ public class Tree {
 	}
 	
 	public boolean isLeaf(){
-		return this.nodes.size() == 0;
+		// the kids who survived
+		for (Tree node : getNodes()){
+			if (!node.isDeleted()){
+				return false;
+			}
+		}
+		return true;
 	}
 	
 	public boolean hasChildren(){
